@@ -1,6 +1,6 @@
 data
 venv
 logs
-mission_xmls/currentMission.xml
+my_mission_xmls/*
 .mypy_cache
 .ipynb_checkpoints

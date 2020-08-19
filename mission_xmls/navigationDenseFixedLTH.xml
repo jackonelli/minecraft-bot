@@ -19,7 +19,7 @@
             <AllowSpawning>false</AllowSpawning>
         </ServerInitialConditions>
         <ServerHandlers>
-            <FileWorldGenerator src= "${MINERL_PATH_TO_LTH_WORLD}" destroyAfterUse = "true"/>
+            <FileWorldGenerator src= "$(MINERL_PATH_TO_LTH_WORLD)" destroyAfterUse = "true"/>
             <NavigationDecorator>
                 <randomPlacementProperties>
                     <maxRandomizedRadius>64</maxRandomizedRadius>
