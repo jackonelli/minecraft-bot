@@ -1,3 +1,7 @@
-minerl
+minerl>=0.2.7
+chainerrl>=0.7.0
+pydot
+cupy
+jupyter
 gym
 numpy
