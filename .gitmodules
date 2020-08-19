@@ -1,3 +1,6 @@
 [submodule "lth-block-world"]
 	path = lth-block-world
 	url = git@github.com:lunduniversity/lth-block-world.git
+[submodule "baselines"]
+	path = baselines
+	url = git@github.com:minerllabs/baselines.git
