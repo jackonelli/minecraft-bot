@@ -22,12 +22,13 @@
             <FileWorldGenerator src="$(MINERL_PATH_TO_LTH_WORLD)" destroyAfterUse = "true"/>
             <NavigationDecorator>
                 <randomPlacementProperties>
-                    <maxRandomizedRadius>64</maxRandomizedRadius>
-                    <minRandomizedRadius>64</minRandomizedRadius>
-                    <maxRadius>8</maxRadius>
+                    <origin x ="-265" y="64" z="10242"/>
+                    <maxRandomizedRadius>1</maxRandomizedRadius>
+                    <minRandomizedRadius>1</minRandomizedRadius>
+                    <maxRadius>1</maxRadius>
                     <minRadius>0</minRadius>
                     <block>diamond_block</block>
-                    <placement>fixed_surface</placement>
+                    <placement>circle</placement>
                 </randomPlacementProperties>
                 <minRandomizedDistance>0</minRandomizedDistance>
                 <maxRandomizedDistance>8</maxRandomizedDistance>
