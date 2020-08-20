@@ -14,6 +14,7 @@
                 <StartTime>6000</StartTime>
                 <AllowPassageOfTime>false</AllowPassageOfTime>
             </Time>
+            
             <Weather>clear</Weather>
             <AllowSpawning>false</AllowSpawning>
         </ServerInitialConditions>
@@ -21,7 +22,7 @@
             <FileWorldGenerator src="$(MINERL_PATH_TO_LTH_WORLD)" destroyAfterUse = "true"/>
             <NavigationDecorator>
                 <randomPlacementProperties>
-                    <origin x ="-240" y="72" z="10242"/>
+                    <origin x="-240" y="79" z="10242"/>
                     <maxRandomizedRadius>1</maxRandomizedRadius>
                     <minRandomizedRadius>1</minRandomizedRadius>
                     <maxRadius>1</maxRadius>
@@ -42,7 +43,7 @@
     <AgentSection mode="Survival">
         <Name>MineRLAgent</Name>
         <AgentStart>
-            <Placement x ="-240" y="64" z="10229" yaw="0" pitch="0"/>
+            <Placement x="-240" y="64" z="10229" yaw="0"/>
             <Inventory>
                     <InventoryObject slot="0" type="compass" quantity="1"/>
             </Inventory>
@@ -54,13 +55,13 @@
                 <Height>64</Height>
             </VideoProducer>
             <FileBasedPerformanceProducer/>
-
+            
             <ObservationFromFullInventory flat="false"/>
             <ObservationFromFullStats/>
             <HumanLevelCommands>
-                <ModifierList type="deny-list">
-                <command>moveMouse</command>
-                <command>inventory</command>
+                <ModifierList type="deny-list"> 
+                <command>moveMouse</command> 
+                <command>inventory</command> 
                 </ModifierList>
             </HumanLevelCommands>
             <CameraCommands/>
@@ -75,6 +76,7 @@
             <RewardForTouchingBlockType>
                 <Block reward="100.0" type="diamond_block" behaviour="onceOnly"/>
             </RewardForTouchingBlockType>
+            <RewardForDistanceTraveledToCompassTarget rewardPerBlock="1" density="PER_TICK"/>
             <PauseCommand/>
         </AgentHandlers>
     </AgentSection>

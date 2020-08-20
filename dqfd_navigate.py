@@ -379,11 +379,11 @@ def main():
     exp_margin_constant = 0.8
 
     # 1) Get Expert Data
-    # expert_buffer = replay.PrioritizedReplayBuffer(75000,
-    #                                                alpha=0.4,
-    #                                                beta=0.6,
-    #                                                epsilon=0.001)
-    # expert_buffer = parse_demo(env_name, expert_buffer, data_path)
+    expert_buffer = replay.PrioritizedReplayBuffer(75000,
+                                                   alpha=0.4,
+                                                   beta=0.6,
+                                                   epsilon=0.001)
+    expert_buffer = parse_demo(env_name, expert_buffer, data_path)
 
     # # 2) Train Expert Model on Data
     model = Qnetwork()

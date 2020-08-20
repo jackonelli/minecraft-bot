@@ -1,21 +1,27 @@
 # This file uses the environment variable MINERL_PATH_TO_LTH_WORLD
 # to create private mission-xmls in the folder my_mission_xmls
 import os
+from pathlib import Path
 
 INTERESTING_COORDS = {
-    "outside_house":                (-272, 64, 10253, -90),
-    "outside_close_to_entrance":    (-258, 64, 10238, -90),
-    "inside_entrance":              (-250, 64, 10238, -90),
-    "second_room":                  (-243, 64, 10232, 179),
-    "bottom_of_first_staircase":    (-240, 64, 10229,   0),
-    "top_of_first_staircase":       (-240, 72, 10242,   0),
-    "bottom_of_second_staircase":   (-240, 72, 10229,   0),
-    "top_of_second_staircase":      (-240, 79, 10242,   0),
-    "an_office_entrance":           (-244, 79, 10236,  90),
-    "inside_office":                (-249, 79, 10236,  90),
+    "outside_house": (-272, 64, 10253, -90),
+    "outside_close_to_entrance": (-258, 64, 10238, -90),
+    "inside_entrance": (-250, 64, 10238, -90),
+    "second_room": (-243, 64, 10232, 179),
+    "bottom_of_first_staircase": (-240, 64, 10229, 0),
+    "top_of_first_staircase": (-240, 72, 10242, 0),
+    "bottom_of_second_staircase": (-240, 72, 10229, 0),
+    "top_of_second_staircase": (-240, 79, 10242, 0),
+    "an_office_entrance": (-244, 79, 10236, 90),
+    "inside_office": (-249, 79, 10236, 90),
 }
 
-def create_mission(start_coords, goal_coords, mission_name="tmpMission", dense=False, depth=False):
+
+def create_mission(start_coords,
+                   goal_coords,
+                   mission_name="tmpMission",
+                   dense=False,
+                   depth=False):
     """
         Creates a mission-xml placed in the mission_xmls folder
         :start_coords: on the form (x, y, z, yaw)
@@ -24,6 +30,7 @@ def create_mission(start_coords, goal_coords, mission_name="tmpMission", dense=F
         :depth: boolean for depth data in the pov-observation
     """
 
+    template_path = Path.cwd() / "mission_xmls/template.xml"
     xml_file = open(template_path, "r")
     xml = xml_file.read()
     xml_file.close()
@@ -35,7 +42,10 @@ def create_mission(start_coords, goal_coords, mission_name="tmpMission", dense=F
     xml = xml.replace("$(GOAL_COORDS)", goal_str)
 
     if dense:
-        xml = xml.replace("$(DENSE)", '            <RewardForDistanceTraveledToCompassTarget rewardPerBlock="1" density="PER_TICK"/>')
+        xml = xml.replace(
+            "$(DENSE)",
+            '            <RewardForDistanceTraveledToCompassTarget rewardPerBlock="1" density="PER_TICK"/>'
+        )
     else:
         xml = xml.replace("$(DENSE)", "")
 
@@ -49,3 +59,18 @@ def create_mission(start_coords, goal_coords, mission_name="tmpMission", dense=F
     write_file = open(write_path, "w+")
     write_file.write(xml)
     write_file.close()
+
+
+def densify():
+    start_coords = INTERESTING_COORDS["bottom_of_first_staircase"]
+    goal_coords = INTERESTING_COORDS["top_of_second_staircase"]
+    mission_name = "dense_double_stair"
+    create_mission(start_coords,
+                   goal_coords,
+                   mission_name,
+                   dense=True,
+                   depth=False)
+
+
+if __name__ == "__main__":
+    densify()
