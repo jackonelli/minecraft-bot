@@ -14,14 +14,18 @@ INTERESTING_COORDS = {
     "inside_office":                (-249, 79, 10236,  90),
 }
 
-def create_mission(start_coords, goal_coords, mission_name="tmpMission"):
+def create_mission(start_coords, goal_coords, mission_name="tmpMission", dense=False):
     """
         Creates a mission-xml placed in the mission_xmls folder
         :start_coords: on the form (x, y, z, yaw)
         :goal_coords: (placement of diamond block) on the form (x, y, z)
 
     """
-    template_path = "mission_xmls/template.xml"
+    if dense:
+        template_path = "mission_xmls/templateDense.xml"
+    else:
+        template_path = "mission_xmls/template.xml"
+
     xml_file = open(template_path, "r")
     xml = xml_file.read()
     xml_file.close()
@@ -31,6 +35,9 @@ def create_mission(start_coords, goal_coords, mission_name="tmpMission"):
 
     xml = xml.replace("$(START_COORDS)", start_str)
     xml = xml.replace("$(GOAL_COORDS)", goal_str)
-    write_file = open(os.path.join("mission_xmls", mission_name + ".xml"), "w+")
+
+    write_path = os.path.join("mission_xmls", mission_name + ".xml")
+
+    write_file = open(write_path, "w+")
     write_file.write(xml)
     write_file.close()
