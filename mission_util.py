@@ -24,6 +24,7 @@ def create_mission(start_coords, goal_coords, mission_name="tmpMission", dense=F
         :depth: boolean for depth data in the pov-observation
     """
 
+    template_path = "mission_xmls/template.xml"
     xml_file = open(template_path, "r")
     xml = xml_file.read()
     xml_file.close()
