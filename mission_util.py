@@ -35,7 +35,7 @@ def create_mission(start_coords, goal_coords, mission_name="tmpMission", dense=F
     xml = xml.replace("$(GOAL_COORDS)", goal_str)
 
     if dense:
-        xml = xml.replace("$(DENSE)", '            <RewardForDistanceTraveledToCompassTarget rewardPerBlock="1" density="PER_TICK"/>'
+        xml = xml.replace("$(DENSE)", '            <RewardForDistanceTraveledToCompassTarget rewardPerBlock="1" density="PER_TICK"/>')
     else:
         xml = xml.replace("$(DENSE)", "")
 
