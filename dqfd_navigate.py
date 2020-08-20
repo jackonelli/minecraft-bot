@@ -1,3 +1,4 @@
+from pathlib import Path
 import minerl
 import gym
 
@@ -365,14 +366,26 @@ def main():
     data_path = os.path.join(
         root_path, 'data')  # Or wherever you have stored the expert data
 
-    # 1) Get Expert Data
-    expert_buffer = replay.PrioritizedReplayBuffer(75000,
-                                                   alpha=0.4,
-                                                   beta=0.6,
-                                                   epsilon=0.001)
-    expert_buffer = parse_demo(env_name, expert_buffer, data_path)
+    summary_path = root_path + 'train_summary/' + env_name
 
-    # 2) Train Expert Model on Data
+    dqfd_model_path = root_path + 'dqfd_model'
+    expert_model_path = root_path + '/expert_model'
+
+    action_len = 13
+    train_steps = 1e5
+    batch_size = 32
+    gamma = 0.99
+    nstep_gamma = 0.99
+    exp_margin_constant = 0.8
+
+    # 1) Get Expert Data
+    # expert_buffer = replay.PrioritizedReplayBuffer(75000,
+    #                                                alpha=0.4,
+    #                                                beta=0.6,
+    #                                                epsilon=0.001)
+    # expert_buffer = parse_demo(env_name, expert_buffer, data_path)
+
+    # # 2) Train Expert Model on Data
     model = Qnetwork()
 
     saver = tf.compat.v1.train.Saver()
@@ -384,127 +397,115 @@ def main():
     sess = tf.compat.v1.Session(config=config)
     sess.run(init)
 
-    summary_path = root_path + 'train_summary/' + env_name
     summary_writer = tf.compat.v1.summary.FileWriter(summary_path)
-
-    dqfd_model_path = root_path + 'dqfd_model'
-    expert_model_path = root_path + 'expert_model'
-
-    action_len = 13
-    train_steps = 100000
-    batch_size = 32
-    gamma = 0.99
-    nstep_gamma = 0.99
-    exp_margin_constant = 0.8
-
     time_int = int(time.time())
     loss = np.zeros((4, ))
 
-    print('Training expert model')
-    for current_step in range(train_steps):
-        print("current_step: " + str(current_step))
+    # print('Training expert model')
+    # for current_step in range(train_steps):
+    #     print("current_step: " + str(current_step))
 
-        empty_batch_by_one = np.zeros((batch_size, 1))
-        empty_action_batch = np.zeros((batch_size, 2))
-        empty_action_batch[:, 0] = np.arange(batch_size)
-        empty_batch_by_action_len = np.zeros((batch_size, action_len))
-        ti_tuple = tuple(
-            [i for i in range(batch_size)]
-        )  # Used for indexing a array down below, probably a better way to do this
-        nstep_final_gamma = nstep_gamma**10
+    #     empty_batch_by_one = np.zeros((batch_size, 1))
+    #     empty_action_batch = np.zeros((batch_size, 2))
+    #     empty_action_batch[:, 0] = np.arange(batch_size)
+    #     empty_batch_by_action_len = np.zeros((batch_size, action_len))
+    #     ti_tuple = tuple(
+    #         [i for i in range(batch_size)]
+    #     )  # Used for indexing a array down below, probably a better way to do this
+    #     nstep_final_gamma = nstep_gamma**10
 
-        # Samples stored as a list of dictionaries. have to get the samples from that dict list
-        exp_minibatch = expert_buffer.sample(batch_size)
-        exp_zip_batch = []
-        for i in exp_minibatch:
-            exp_zip_batch.append(i['sample'])
+    #     # Samples stored as a list of dictionaries. have to get the samples from that dict list
+    #     exp_minibatch = expert_buffer.sample(batch_size)
+    #     exp_zip_batch = []
+    #     for i in exp_minibatch:
+    #         exp_zip_batch.append(i['sample'])
 
-        exp_states_batch, exp_action_batch, exp_reward_batch, exp_next_states_batch, \
-        exp_done_batch, exp_nstep_rew_batch, exp_nstep_next_batch = map(np.array, zip(*exp_zip_batch))
-        is_expert_input = np.ones((batch_size, 1))
+    #     exp_states_batch, exp_action_batch, exp_reward_batch, exp_next_states_batch, \
+    #     exp_done_batch, exp_nstep_rew_batch, exp_nstep_next_batch = map(np.array, zip(*exp_zip_batch))
+    #     is_expert_input = np.ones((batch_size, 1))
 
-        # Expert action made into a 2d array for when tf.gather_nd is called during training
-        input_exp_action = np.zeros((batch_size, 2))
-        input_exp_action[:, 0] = np.arange(batch_size)
-        input_exp_action[:, 1] = exp_action_batch
+    #     # Expert action made into a 2d array for when tf.gather_nd is called during training
+    #     input_exp_action = np.zeros((batch_size, 2))
+    #     input_exp_action[:, 0] = np.arange(batch_size)
+    #     input_exp_action[:, 1] = exp_action_batch
 
-        exp_margin = np.ones((batch_size, action_len)) * exp_margin_constant
-        exp_margin[
-            np.arange(batch_size),
-            exp_action_batch] = 0.  # Expert chosen actions don't have margin
-        next_states_batch = exp_next_states_batch
-        nstep_next_batch = exp_nstep_next_batch
-        states_batch = exp_states_batch
-        q_values_next, nstep_q_values_next = sess.run(
-            [model.dq_output, model.nstep_output],
-            feed_dict={
-                model.input_img_dq: next_states_batch,
-                model.input_img_nstep: nstep_next_batch,
-                model.actions: exp_action_batch,
-                model.input_expert_action: empty_action_batch,
-                model.input_is_expert: empty_batch_by_one,
-                model.input_expert_margin: empty_batch_by_action_len
-            })
-        action_max = np.argmax(q_values_next, axis=1)
-        nstep_action_max = np.argmax(nstep_q_values_next, axis=1)
-        dq_targets, nstep_targets = sess.run(
-            [model.dq_output, model.nstep_output],
-            feed_dict={
-                model.input_img_dq: states_batch,
-                model.input_img_nstep: states_batch,
-                model.actions: exp_action_batch,
-                model.input_expert_action: empty_action_batch,
-                model.input_is_expert: empty_batch_by_one,
-                model.input_expert_margin: empty_batch_by_action_len
-            })
-        reward_batch = exp_reward_batch
-        done_batch = exp_done_batch
-        dq_targets[ti_tuple,exp_action_batch] = reward_batch + \
-                                                 (1 - done_batch) * gamma \
-                                                 * q_values_next[np.arange(batch_size),action_max]
-        nstep_rew_batch = exp_nstep_rew_batch
-        done_batch = exp_done_batch
-        nstep_targets[ti_tuple,exp_action_batch] = nstep_rew_batch + \
-                                                    (1 - done_batch) * nstep_final_gamma \
-                                                    * nstep_q_values_next[np.arange(batch_size),nstep_action_max]
+    #     exp_margin = np.ones((batch_size, action_len)) * exp_margin_constant
+    #     exp_margin[
+    #         np.arange(batch_size),
+    #         exp_action_batch] = 0.  # Expert chosen actions don't have margin
+    #     next_states_batch = exp_next_states_batch
+    #     nstep_next_batch = exp_nstep_next_batch
+    #     states_batch = exp_states_batch
+    #     q_values_next, nstep_q_values_next = sess.run(
+    #         [model.dq_output, model.nstep_output],
+    #         feed_dict={
+    #             model.input_img_dq: next_states_batch,
+    #             model.input_img_nstep: nstep_next_batch,
+    #             model.actions: exp_action_batch,
+    #             model.input_expert_action: empty_action_batch,
+    #             model.input_is_expert: empty_batch_by_one,
+    #             model.input_expert_margin: empty_batch_by_action_len
+    #         })
+    #     action_max = np.argmax(q_values_next, axis=1)
+    #     nstep_action_max = np.argmax(nstep_q_values_next, axis=1)
+    #     dq_targets, nstep_targets = sess.run(
+    #         [model.dq_output, model.nstep_output],
+    #         feed_dict={
+    #             model.input_img_dq: states_batch,
+    #             model.input_img_nstep: states_batch,
+    #             model.actions: exp_action_batch,
+    #             model.input_expert_action: empty_action_batch,
+    #             model.input_is_expert: empty_batch_by_one,
+    #             model.input_expert_margin: empty_batch_by_action_len
+    #         })
+    #     reward_batch = exp_reward_batch
+    #     done_batch = exp_done_batch
+    #     dq_targets[ti_tuple,exp_action_batch] = reward_batch + \
+    #                                              (1 - done_batch) * gamma \
+    #                                              * q_values_next[np.arange(batch_size),action_max]
+    #     nstep_rew_batch = exp_nstep_rew_batch
+    #     done_batch = exp_done_batch
+    #     nstep_targets[ti_tuple,exp_action_batch] = nstep_rew_batch + \
+    #                                                 (1 - done_batch) * nstep_final_gamma \
+    #                                                 * nstep_q_values_next[np.arange(batch_size),nstep_action_max]
 
-        action_batch = exp_action_batch
-        dq_targets = dq_targets[np.arange(batch_size), action_batch]
-        nstep_targets = nstep_targets[np.arange(batch_size), action_batch]
-        _, loss_summary, td_error_dq, td_error_nstep, slmc_value = sess.run(
-            [
-                model.updateModel, model.summaries, model.td_error_dq,
-                model.td_error_nstep, model.slmc_output
-            ],
-            feed_dict={
-                model.input_img_dq: states_batch,
-                model.input_img_nstep: states_batch,
-                model.actions: exp_action_batch,
-                model.input_expert_action: input_exp_action,
-                model.input_is_expert: is_expert_input,
-                model.input_expert_margin: exp_margin,
-                model.targetQ_dq: dq_targets,
-                model.targetQ_nstep: nstep_targets
-            })
+    #     action_batch = exp_action_batch
+    #     dq_targets = dq_targets[np.arange(batch_size), action_batch]
+    #     nstep_targets = nstep_targets[np.arange(batch_size), action_batch]
+    #     _, loss_summary, td_error_dq, td_error_nstep, slmc_value = sess.run(
+    #         [
+    #             model.updateModel, model.summaries, model.td_error_dq,
+    #             model.td_error_nstep, model.slmc_output
+    #         ],
+    #         feed_dict={
+    #             model.input_img_dq: states_batch,
+    #             model.input_img_nstep: states_batch,
+    #             model.actions: exp_action_batch,
+    #             model.input_expert_action: input_exp_action,
+    #             model.input_is_expert: is_expert_input,
+    #             model.input_expert_margin: exp_margin,
+    #             model.targetQ_dq: dq_targets,
+    #             model.targetQ_nstep: nstep_targets
+    #         })
 
-        summary_writer.add_summary(loss_summary, current_step)
+    #     summary_writer.add_summary(loss_summary, current_step)
 
-        #dq_loss = td_error_dq
-        #nstep_loss = td_error_nstep
-        #sample_losses = dq_loss_weighted + nstep_loss_weighted + np.abs(slmc_value)
-        #expert_buffer.update_weights(exp_minibatch, loss_summary)
+    #     #dq_loss = td_error_dq
+    #     #nstep_loss = td_error_nstep
+    #     #sample_losses = dq_loss_weighted + nstep_loss_weighted + np.abs(slmc_value)
+    #     #expert_buffer.update_weights(exp_minibatch, loss_summary)
 
-        if (current_step % 1000 == 0):
-            saver.save(
-                sess,
-                expert_model_path + '/model-' + str(current_step) + '.cptk')
+    #     if (current_step % 100 == 0):
+    #         print("Saving model to {}".format(expert_model_path + "/model"))
+    #         saver.save(
+    #             sess,
+    #             expert_model_path + '/model-' + str(current_step) + '.cptk')
 
     # 3) Train DQFD Model, starting from Expert Model
-    print('Training DQFD model')
     env = gym.make(env_name)
 
     ckpt = tf.train.get_checkpoint_state(expert_model_path)
-    saver.restore(sess, ckpt.model_checkpoint_path)
+    saver.restore(sess, str(Path(expert_model_path) / "model-50000.cptk"))
 
     replay_buffer = replay.PrioritizedReplayBuffer(75000,
                                                    alpha=0.4,

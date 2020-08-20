@@ -1,13 +1,14 @@
-# python3 -m retro.examples.interactive --game SonicAndKnuckles-Genesis
-import minerl
-import gym
-
+""" Reduced action space"""
 import random
 import time
-import numpy as np
+from pathlib import Path
 from collections import deque
 from os import listdir
 from os.path import isfile, join, isdir
+
+import minerl
+import gym
+import numpy as np
 
 import tensorflow as tf
 import per_replay as replay
@@ -324,9 +325,9 @@ class Qnetwork():
 
 def main():
     env_name = "MineRLNavigate-v0"
-    root_path = "/home/jimmy/AI/Coursework/WASP/DQFD"
-    data_path = "/home/jimmy/AI/Coursework/WASP/data"
-    save_dir = root_path + 'video'
+    root_path = Path.cwd()
+    data_path = "data"
+    save_dir = root_path / "results/reduced_action"
 
     # Get Expert Data
     expert_buffer = replay.PrioritizedReplayBuffer(75000,
