@@ -50,7 +50,7 @@
         </AgentStart>
         <AgentHandlers>
 
-            <VideoProducer want_depth="false">
+            <VideoProducer want_depth="$(DEPTH)">
                 <Width>64</Width>
                 <Height>64</Height>
             </VideoProducer>
@@ -76,6 +76,7 @@
             <RewardForTouchingBlockType>
                 <Block reward="100.0" type="diamond_block" behaviour="onceOnly"/>
             </RewardForTouchingBlockType>
+$(DENSE)
             <PauseCommand/>
         </AgentHandlers>
     </AgentSection>

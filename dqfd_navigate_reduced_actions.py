@@ -13,6 +13,8 @@ import numpy as np
 import tensorflow as tf
 import per_replay as replay
 
+default_integrations = False
+
 
 def parse_demo(env_name, rep_buffer, data_path, nsteps=10):
     data = minerl.data.make(env_name, data_dir=data_path)
@@ -37,31 +39,14 @@ def parse_demo(env_name, rep_buffer, data_path, nsteps=10):
 
         length = (state['pov'].shape)[0]
         for i in range(0, length):
-            #action_index = 0
-
-            camera_threshols = (abs(action['camera'][i][0]) +
-                                abs(action['camera'][i][1])) / 2.0
-            if (camera_threshols > 2.5):
-                if ((action['camera'][i][1] < 0) &
-                    (abs(action['camera'][i][0]) < abs(
-                        action['camera'][i][1]))):
-                    action_index = 0
-                elif ((action['camera'][i][1] > 0) &
-                      (abs(action['camera'][i][0]) < abs(
-                          action['camera'][i][1]))):
-                    action_index = 1
-                elif ((action['camera'][i][0] < 0) &
-                      (abs(action['camera'][i][0]) > abs(
-                          action['camera'][i][1]))):
-                    action_index = 2
-                elif ((action['camera'][i][0] > 0) &
-                      (abs(action['camera'][i][0]) > abs(
-                          action['camera'][i][1]))):
-                    action_index = 3
+            if (action['camera'][i][1] < 0):
+                action_index = 0
+            elif (action['camera'][i][1] > 0):
+                action_index = 1
             elif (action['forward'][i] == 1):
-                action_index = 4
+                action_index = 2
             elif (action['jump'][i] == 1):
-                action_index = 5
+                action_index = 3
             else:
                 continue
             game_a = action_index
@@ -134,7 +119,8 @@ def add_transition(rep_buffer,
     trans = {}
     if empty_deque:
         # emptying the deques
-        while len(ns_rew) > 0:
+        keep_processing = 0
+        while len(ns_rew) > 0 & keep_processing < 2000:
             for j in range(len(ns_rew)):
                 ns_rew_sum += ns_rew[j] * ns_gamma**j
 
@@ -149,6 +135,7 @@ def add_transition(rep_buffer,
             ]
 
             rep_buffer.add_sample(trans)
+            keep_processing = keep_processing + 1
     else:
         for j in range(ns):
             ns_rew_sum += ns_rew[j] * ns_gamma**j
@@ -168,7 +155,7 @@ def add_transition(rep_buffer,
 
 class Qnetwork():
     def __init__(self):
-        action_len = 6
+        action_len = 4
 
         def image_scale(image):
             scale_img = image / 255.0
@@ -354,7 +341,7 @@ def main():
     dqfd_model_path = root_path + 'dqfd_model'
     expert_model_path = root_path + 'expert_model'
 
-    action_len = 6
+    action_len = 4
     train_steps = 100000
     batch_size = 32
     gamma = 0.99
@@ -520,7 +507,7 @@ def main():
         # get action
         if random.random() <= epsilon:
             action_index = random.randint(
-                0, 5
+                0, 3
             )  ## JIMMY: Changed from (0,12). I assume it refer to action numbers, but I may be wrong.
         else:
             #temp_curr_obs = np.array(curr_obs)
@@ -554,13 +541,11 @@ def main():
         elif (action_index == 1):
             action['camera'] = [0, 5]
         elif (action_index == 2):
-            action['camera'] = [-5, 0]
-        elif (action_index == 3):
-            action['camera'] = [5, 0]
-        elif (action_index == 4):
             action['forward'] = 1
-        elif (action_index == 5):
+        elif (action_index == 3):
             action['jump'] = 1
+
+        action['attack'] = 1
 
         # do action
         obs, rew, done, info = env.step(action)
@@ -752,7 +737,8 @@ def main():
     obs = env.reset()
     s = obs['pov']
     total_rew = 0
-    while True:
+    keep_processing = 0
+    while keep_processing < 2000:
         if random.random() <= epsilon:
             action_index = random.randint(0, action_len - 1)
         else:
@@ -771,13 +757,11 @@ def main():
         elif (action_index == 1):
             action['camera'] = [0, 5]
         elif (action_index == 2):
-            action['camera'] = [-5, 0]
-        elif (action_index == 3):
-            action['camera'] = [5, 0]
-        elif (action_index == 4):
             action['forward'] = 1
-        elif (action_index == 5):
+        elif (action_index == 3):
             action['jump'] = 1
+
+        action['attack'] = 1
 
         #print("action: " + str(action))
         #print("")
@@ -791,8 +775,10 @@ def main():
         #env.render()
         if done:
             print("total_rew: " + str(total_rew))
+            keep_processing = 2000
             obs = env.reset()
 
+        keep_processing = keep_processing + 1
     env.close()
 
 
