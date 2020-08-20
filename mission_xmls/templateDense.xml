@@ -22,12 +22,13 @@
             <FileWorldGenerator src="$(MINERL_PATH_TO_LTH_WORLD)" destroyAfterUse = "true"/>
             <NavigationDecorator>
                 <randomPlacementProperties>
-                    <maxRandomizedRadius>64</maxRandomizedRadius>
-                    <minRandomizedRadius>64</minRandomizedRadius>
-                    <maxRadius>8</maxRadius>
+                    <origin $(GOAL_COORDS)/>
+                    <maxRandomizedRadius>1</maxRandomizedRadius>
+                    <minRandomizedRadius>1</minRandomizedRadius>
+                    <maxRadius>1</maxRadius>
                     <minRadius>0</minRadius>
                     <block>diamond_block</block>
-                    <placement>fixed_surface</placement>
+                    <placement>circle</placement>
                 </randomPlacementProperties>
                 <minRandomizedDistance>0</minRandomizedDistance>
                 <maxRandomizedDistance>8</maxRandomizedDistance>
@@ -42,7 +43,7 @@
     <AgentSection mode="Survival">
         <Name>MineRLAgent</Name>
         <AgentStart>
-            <Placement x ="-272" y="64" z="10239" yaw="-64" pitch="0"/>
+            <Placement $(START_COORDS)/>
             <Inventory>
                     <InventoryObject slot="0" type="compass" quantity="1"/>
             </Inventory>
@@ -50,8 +51,8 @@
         <AgentHandlers>
 
             <VideoProducer want_depth="false">
-                <Width>640</Width>
-                <Height>640</Height>
+                <Width>64</Width>
+                <Height>64</Height>
             </VideoProducer>
             <FileBasedPerformanceProducer/>
             
@@ -75,6 +76,7 @@
             <RewardForTouchingBlockType>
                 <Block reward="100.0" type="diamond_block" behaviour="onceOnly"/>
             </RewardForTouchingBlockType>
+            <RewardForDistanceTraveledToCompassTarget rewardPerBlock="1" density="PER_TICK"/>
             <PauseCommand/>
         </AgentHandlers>
     </AgentSection>
