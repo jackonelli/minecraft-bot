@@ -15,6 +15,6 @@ for xml_path in glob.glob("mission_xmls/*.xml"):
     xml_file.close()
 
     xml = xml.replace("$(MINERL_PATH_TO_LTH_WORLD)", PATH_TO_LTH_WORLD)
-    write_path = open("my_" + xml_path, "w+")
-    write_path.write(xml)
-    write_path.close()
+    write_file = open("my_" + xml_path, "w+")
+    write_file.write(xml)
+    write_file.close()

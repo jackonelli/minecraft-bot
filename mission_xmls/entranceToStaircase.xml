@@ -22,7 +22,7 @@
             <FileWorldGenerator src="$(MINERL_PATH_TO_LTH_WORLD)" destroyAfterUse = "true"/>
             <NavigationDecorator>
                 <randomPlacementProperties>
-                    <origin x ="-265" y="64" z="10242"/>
+                    <origin x ="-240" y="64" z="10229"/>
                     <maxRandomizedRadius>1</maxRandomizedRadius>
                     <minRandomizedRadius>1</minRandomizedRadius>
                     <maxRadius>1</maxRadius>
@@ -43,7 +43,7 @@
     <AgentSection mode="Survival">
         <Name>MineRLAgent</Name>
         <AgentStart>
-            <Placement x ="-272" y="64" z="10239" yaw="-64" pitch="0"/>
+            <Placement x ="-250" y="64" z="10238" yaw="-90" pitch="0"/>
             <Inventory>
                     <InventoryObject slot="0" type="compass" quantity="1"/>
             </Inventory>
